@@ -35,42 +35,50 @@ SystemInit FUNCTION
 	LDR		R0, [R1]			;Copy contents at address in R1 to R0
 	ORR.W 	R0, #0x08			;Bitwise OR entire word in R0, result in R0
 	STR		R0, [R1]			;Store R0 contents to address in R1
-
-	; Set mode as output
-	LDR		R1, =GPIOD_MODER	;Two bits per pin so bits 24 to 31 control pins 12 to 15
-	LDR		R0, [R1]			
-	ORR.W 	R0, #0x55000000		;Mode bits set to '01' makes the pin mode as output
-	AND.W	R0, #0x55FFFFFF		;OR and AND both operations reqd for 2 bits
-	STR		R0, [R1]
-
-	; Set type as push-pull	(Default)
-	LDR		R1, =GPIOD_OTYPER	;Type bit '0' configures pin for push-pull
-	LDR		R0, [R1]
-	AND.W 	R0, #0xFFFF0FFF	
-	STR		R0, [R1]
 	
-	; Set Speed slow
-	LDR		R1, =GPIOD_OSPEEDR	;Two bits per pin so bits 24 to 31 control pins 12 to 15
-	LDR		R0, [R1]
-	AND.W 	R0, #0x00FFFFFF		;Speed bits set to '00' configures pin for slow speed
-	STR		R0, [R1]	
-	
-	; Set pull-up
-	LDR		R1, =GPIOD_PUPDR	;Two bits per pin so bits 24 to 31 control pins 12 to 15
-	LDR		R0, [R1]
-	AND.W	R0, #0x00FFFFFF		;Clear bits to disable pullup/pulldown
-	STR		R0, [R1]
-
+	; Configuracion de SysTick
 	LDR		R1, =SYSTICK_RELOADR ; En este registro se guarda cada cuanto se quiere que systick lance una excepcion
 	LDR		R2,	=SYST_RELOAD_500MS
 	STR		R2, [R1]
 
-	MOV	R7, #0x00
-	
 	LDR		R1, =SYSTICK_CONTROLR
 	LDR 	R0, [R1]
 	ORR.W	R0, #ENABLE_SYSTICK
 	STR		R0, [R1]
+	
+	; Inicializando semaforos
+	MOV		R1, #2 ; Verde
+	MOV		R2, #0 ; Rojo
+	
+	MOV 	R3, #536870912 ; Direccion base
+	
+	; Vehiculares
+	STR		R1, [R3, #0]
+	STR 	R2, [R3, #4]
+	STR 	R1, [R3, #8]
+	STR 	R2, [R3, # 12]
+	
+	; Peatonales
+	STR		R2, [R3, #16]
+	STR 	R1, [R3, #20]
+	STR 	R2, [R3, #24]
+	STR 	R1, [R3, #28]
+	
+	
+	; Inicializando carros
+	; Se harán 4 filas de 8 carros(32 posiciones de memoria) para demostrar el funcionamiento del sistema
+	ADD 	R3, R3, #28 ; Seguiremos escribiendo en #(536870912+48)
+	MOV 	R1, #1 ; Representa que hay un carro
+
+	MOV		R2, #1  ; i = 1
+	MOV 	R5, #4
+Loops_Calle
+	MUL 	R4, R2, R5  ; R4 = R2*R5
+	STR 	R1, [R3, R4] ; Guarda R1 en la posicion de memoria (R3+R4)
+	
+	ADD 	R2, R2, #1 ; i += 1
+	CMP		R2, #33 ; R2-8==0? Z=1 : Z=0
+	BNE		Loops_Calle ; Si no es igual, salte a Loops_Calle, si es igual, rompa el ciclo
 
 	BX		LR					;Return from function
 	
@@ -93,7 +101,7 @@ SystemInit FUNCTION
 __main FUNCTION
 	
 	
-	B	.
+	B	. ; Loop infinito
 
 	ENDFUNC
 	

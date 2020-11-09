@@ -81,35 +81,65 @@ ARM Macro Assembler    Page 2
    12 00000000                 AREA             ISRCODE, CODE, READONLY
    13 00000000         
    14 00000000         SysTick_Handler
-                               PROC
+                               PROC                         ; Aqui definimos lo
+                                                             que se ejecuta en 
+                                                            la excepcion
    15 00000000                 EXPORT           SysTick_Handler
    16 00000000         
-   17 00000000 4905            LDR              R1, =GPIOD_BSRR
-   18 00000002         
-   19 00000002 B117            CBZ              R7, Turn_OFF
-   20 00000004         Turn_ON
-   21 00000004 F44F 4070       MOV              R0, #LEDs_ON
-   22 00000008 E001            B                Done
-   23 0000000A         Turn_OFF
-   24 0000000A F04F 4070       MOV              R0, #LEDs_OFF
-   25 0000000E         Done
-   26 0000000E 6008            STR              R0, [R1]
-   27 00000010 F087 0701       EOR              R7, R7, #0x01
-   28 00000014         
-   29 00000014 4770            BX               LR
-   30 00000016         
-   31 00000016                 ENDP
-   32 00000016         
-   33 00000016 00 00           ALIGN            4
-   34 00000018 0000F000 
+   17 00000000         ; Codigo aqui
+   18 00000000         
+   19 00000000         ; Sumando 1s a los registros que llevan el tiempo, el de
+                       l semaforo amarillo no 
+   20 00000000         ; se toma en cuenta.
+   21 00000000 F102 0201       ADD              R2, R2, #1  ; Contador de tiemp
+                                                            o de los carros
+   22 00000004 F104 0401       ADD              R4, R4, #1  ; tiempo de espera 
+                                                            del carril contrari
+                                                            o
+   23 00000008         
+   24 00000008         ; Comparaciones y saltos
+   25 00000008 F1BD 0F01       CMP              R13, #1     ; Estado 1?
+   26 0000000C D009            BEQ              E1
+   27 0000000E F1BD 0F02       CMP              R13, #2     ; Estado 2?
+   28 00000012 D006            BEQ              E2
+   29 00000014 F1BD 0F03       CMP              R13, #3     ; Estado 3?
+   30 00000018 D003            BEQ              E3
+   31 0000001A F1BD 0F04       CMP              R13, #4     ; Estado 4?
+   32 0000001E D000            BEQ              E4
+   33 00000020         ; Default
+   34 00000020 D0FF            BEQ              Done
+   35 00000022         
+   36 00000022         E1                                   ; Estado 1
+   37 00000022         
+   38 00000022         E2                                   ; Estado 2
+   39 00000022         
+   40 00000022         E3                                   ; Estado 3
+   41 00000022         
+   42 00000022         E4                                   ; Estado 4
+   43 00000022         
+   44 00000022         Done                                 ; Branch de finaliz
+                                                            acion
+   45 00000022         
+   46 00000022 4770            BX               LR          ; Necesario al ser 
+                                                            una excepcion.
+   47 00000024         
+   48 00000024                 ENDP
+   49 00000024         
+   50 00000024                 ALIGN            4
+   51 00000024 0000F000 
                        LEDs_ON EQU              0x0000F000
-   35 00000018 F0000000 
+
+
+
+ARM Macro Assembler    Page 3 
+
+
+   52 00000024 F0000000 
                        LEDs_OFF
                                EQU              0xF0000000
-   36 00000018         
-   37 00000018         
-   38 00000018                 END
-              40020C18 
+   53 00000024         
+   54 00000024         
+   55 00000024                 END
 Command Line: --debug --xref --diag_suppress=9931 --cpu=Cortex-M4.fp.sp --apcs=
 interwork --depend=.\objects\isr.d -o.\objects\isr.o -IC:\Users\kev_s\AppData\L
 ocal\Arm\Packs\Keil\STM32F4xx_DFP\2.15.0\Drivers\CMSIS\Device\ST\STM32F4xx\Incl
@@ -122,14 +152,46 @@ VISION_VERSION SETA 531" --predefine="STM32F407xx SETA 1" --list=.\listings\isr
 ARM Macro Assembler    Page 1 Alphabetic symbol ordering
 Relocatable symbols
 
-Done 0000000E
+Done 00000022
 
 Symbol: Done
    Definitions
-      At line 25 in file ..\src\isr.s
+      At line 44 in file ..\src\isr.s
    Uses
-      At line 22 in file ..\src\isr.s
+      At line 34 in file ..\src\isr.s
 Comment: Done used once
+E1 00000022
+
+Symbol: E1
+   Definitions
+      At line 36 in file ..\src\isr.s
+   Uses
+      At line 26 in file ..\src\isr.s
+Comment: E1 used once
+E2 00000022
+
+Symbol: E2
+   Definitions
+      At line 38 in file ..\src\isr.s
+   Uses
+      At line 28 in file ..\src\isr.s
+Comment: E2 used once
+E3 00000022
+
+Symbol: E3
+   Definitions
+      At line 40 in file ..\src\isr.s
+   Uses
+      At line 30 in file ..\src\isr.s
+Comment: E3 used once
+E4 00000022
+
+Symbol: E4
+   Definitions
+      At line 42 in file ..\src\isr.s
+   Uses
+      At line 32 in file ..\src\isr.s
+Comment: E4 used once
 ISRCODE 00000000
 
 Symbol: ISRCODE
@@ -146,23 +208,7 @@ Symbol: SysTick_Handler
    Uses
       At line 15 in file ..\src\isr.s
 Comment: SysTick_Handler used once
-Turn_OFF 0000000A
-
-Symbol: Turn_OFF
-   Definitions
-      At line 23 in file ..\src\isr.s
-   Uses
-      At line 19 in file ..\src\isr.s
-Comment: Turn_OFF used once
-Turn_ON 00000004
-
-Symbol: Turn_ON
-   Definitions
-      At line 20 in file ..\src\isr.s
-   Uses
-      None
-Comment: Turn_ON unused
-5 symbols
+7 symbols
 
 
 
@@ -175,8 +221,8 @@ Symbol: GPIOD_BSRR
    Definitions
       At line 15 in file ..\src\reg_stm32f407xx.inc
    Uses
-      At line 17 in file ..\src\isr.s
-Comment: GPIOD_BSRR used once
+      None
+Comment: GPIOD_BSRR unused
 GPIOD_MODER 40020C00
 
 Symbol: GPIOD_MODER
@@ -221,10 +267,10 @@ LEDs_OFF F0000000
 
 Symbol: LEDs_OFF
    Definitions
-      At line 35 in file ..\src\isr.s
+      At line 52 in file ..\src\isr.s
    Uses
-      At line 24 in file ..\src\isr.s
-Comment: LEDs_OFF used once
+      None
+Comment: LEDs_OFF unused
 LEDs_ON 0000F000
 
 Symbol: LEDs_ON
@@ -235,10 +281,10 @@ ARM Macro Assembler    Page 2 Alphabetic symbol ordering
 Absolute symbols
 
    Definitions
-      At line 34 in file ..\src\isr.s
+      At line 51 in file ..\src\isr.s
    Uses
-      At line 21 in file ..\src\isr.s
-Comment: LEDs_ON used once
+      None
+Comment: LEDs_ON unused
 RCC_AHB1ENR 40023830
 
 Symbol: RCC_AHB1ENR

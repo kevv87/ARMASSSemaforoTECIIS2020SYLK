@@ -11,22 +11,39 @@
 
 	AREA	ISRCODE, CODE, READONLY
 		
-SysTick_Handler PROC
+SysTick_Handler PROC  ; Aqui definimos lo que se ejecuta en la excepcion
 	EXPORT  SysTick_Handler
 	
-	LDR		R1, =GPIOD_BSRR
+; Codigo aqui
 
-	CBZ		R7, Turn_OFF
-Turn_ON
-	MOV		R0, #LEDs_ON
-	B		Done
-Turn_OFF
-	MOV		R0, #LEDs_OFF
-Done
-	STR		R0, [R1]
-	EOR		R7, R7, #0x01
+	; Sumando 1s a los registros que llevan el tiempo, el del semaforo amarillo no 
+	; se toma en cuenta.
+	ADD R2, R2, #1 ; Contador de tiempo de los carros
+	ADD R4, R4, #1 ; tiempo de espera del carril contrario
 	
-	BX	LR
+	; Comparaciones y saltos
+	CMP R13, #1 ; Estado 1?
+	BEQ E1
+	CMP R13, #2 ; Estado 2?
+	BEQ E2
+	CMP R13, #3 ; Estado 3?
+	BEQ E3
+	CMP R13, #4 ; Estado 4?
+	BEQ E4
+	; Default
+	BEQ Done
+	
+E1 ; Estado 1
+	
+E2 ; Estado 2
+	
+E3 ; Estado 3
+
+E4 ; Estado 4
+	
+Done ; Branch de finalizacion
+	
+	BX	LR ; Necesario al ser una excepcion.
 
 	ENDP
 		

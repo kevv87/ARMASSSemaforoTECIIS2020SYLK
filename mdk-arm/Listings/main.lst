@@ -102,7 +102,7 @@ ARM Macro Assembler    Page 2
                                FUNCTION
    32 00000000         
    33 00000000         ; Enable GPIO clock
-   34 00000000 4913            LDR              R1, =RCC_AHB1ENR ;Pseudo-load a
+   34 00000000 4915            LDR              R1, =RCC_AHB1ENR ;Pseudo-load a
                                                             ddress in R1
    35 00000002 6808            LDR              R0, [R1]    ;Copy contents at a
                                                             ddress in R1 to R0
@@ -112,120 +112,115 @@ ARM Macro Assembler    Page 2
    37 00000008 6008            STR              R0, [R1]    ;Store R0 contents 
                                                             to address in R1
    38 0000000A         
-   39 0000000A         ; Set mode as output
-   40 0000000A 4912            LDR              R1, =GPIOD_MODER ;Two bits per 
-                                                            pin so bits 24 to 3
-                                                            1 control pins 12 t
-                                                            o 15
-   41 0000000C 6808            LDR              R0, [R1]
-   42 0000000E F040 40AA       ORR.W            R0, #0x55000000 ;Mode bits set 
-                                                            to '01' makes the p
-                                                            in mode as output
-   43 00000012 F020 402A       AND.W            R0, #0x55FFFFFF ;OR and AND bot
-                                                            h operations reqd f
-                                                            or 2 bits
-   44 00000016 6008            STR              R0, [R1]
-   45 00000018         
-   46 00000018         ; Set type as push-pull (Default)
-   47 00000018 490F            LDR              R1, =GPIOD_OTYPER ;Type bit '0'
+   39 0000000A         ; Configuracion de SysTick
+   40 0000000A 4914            LDR              R1, =SYSTICK_RELOADR ; En este 
+                                                            registro se guarda 
+                                                            cada cuanto se quie
+                                                            re que systick lanc
+                                                            e una excepcion
+   41 0000000C 4A14            LDR              R2, =SYST_RELOAD_500MS
+   42 0000000E 600A            STR              R2, [R1]
+   43 00000010         
+   44 00000010 4914            LDR              R1, =SYSTICK_CONTROLR
+   45 00000012 6808            LDR              R0, [R1]
+   46 00000014 F040 0007       ORR.W            R0, #ENABLE_SYSTICK
+   47 00000018 6008            STR              R0, [R1]
+   48 0000001A         
+   49 0000001A         ; Inicializando semaforos
+   50 0000001A F04F 0102       MOV              R1, #2      ; Verde
 
 
 
 ARM Macro Assembler    Page 3 
 
 
-                                                             configures pin for
-                                                             push-pull
-   48 0000001A 6808            LDR              R0, [R1]
-   49 0000001C F420 4070       AND.W            R0, #0xFFFF0FFF
-   50 00000020 6008            STR              R0, [R1]
-   51 00000022         
-   52 00000022         ; Set Speed slow
-   53 00000022 490E            LDR              R1, =GPIOD_OSPEEDR ;Two bits pe
-                                                            r pin so bits 24 to
-                                                             31 control pins 12
-                                                             to 15
-   54 00000024 6808            LDR              R0, [R1]
-   55 00000026 F020 407F       AND.W            R0, #0x00FFFFFF ;Speed bits set
-                                                             to '00' configures
-                                                             pin for slow speed
+   51 0000001E F04F 0200       MOV              R2, #0      ; Rojo
+   52 00000022         
+   53 00000022 F04F 5300       MOV              R3, #536870912 ; Direccion base
                                                             
-   56 0000002A 6008            STR              R0, [R1]
-   57 0000002C         
-   58 0000002C         ; Set pull-up
-   59 0000002C 490C            LDR              R1, =GPIOD_PUPDR ;Two bits per 
-                                                            pin so bits 24 to 3
-                                                            1 control pins 12 t
-                                                            o 15
-   60 0000002E 6808            LDR              R0, [R1]
-   61 00000030 F020 407F       AND.W            R0, #0x00FFFFFF ;Clear bits to 
-                                                            disable pullup/pull
-                                                            down
-   62 00000034 6008            STR              R0, [R1]
-   63 00000036         
-   64 00000036 490B            LDR              R1, =SYSTICK_RELOADR ; En este 
-                                                            registro se guarda 
-                                                            cada cuanto se quie
-                                                            re que systick lanc
-                                                            e una excepcion
-   65 00000038 4A0B            LDR              R2, =SYST_RELOAD_500MS
-   66 0000003A 600A            STR              R2, [R1]
-   67 0000003C         
-   68 0000003C F04F 0700       MOV              R7, #0x00
-   69 00000040         
-   70 00000040 490A            LDR              R1, =SYSTICK_CONTROLR
-   71 00000042 6808            LDR              R0, [R1]
-   72 00000044 F040 0007       ORR.W            R0, #ENABLE_SYSTICK
-   73 00000048 6008            STR              R0, [R1]
-   74 0000004A         
-   75 0000004A 4770            BX               LR          ;Return from functi
-                                                            on
-   76 0000004C         
-   77 0000004C                 ENDFUNC
+   54 00000026         
+   55 00000026         ; Vehiculares
+   56 00000026 6019            STR              R1, [R3, #0]
+   57 00000028 605A            STR              R2, [R3, #4]
+   58 0000002A 6099            STR              R1, [R3, #8]
+   59 0000002C 60DA            STR              R2, [R3, # 12]
+   60 0000002E         
+   61 0000002E         ; Peatonales
+   62 0000002E 611A            STR              R2, [R3, #16]
+   63 00000030 6159            STR              R1, [R3, #20]
+   64 00000032 619A            STR              R2, [R3, #24]
+   65 00000034 61D9            STR              R1, [R3, #28]
+   66 00000036         
+   67 00000036         
+   68 00000036         ; Inicializando carros
+   69 00000036         ; Se harán 4 filas de 8 carros(32 posiciones de memoria)
+                        para demostrar el funcionamiento del sistema
+   70 00000036 F103 031C       ADD              R3, R3, #28 ; Seguiremos escrib
+                                                            iendo en #(53687091
+                                                            2+48)
+   71 0000003A F04F 0101       MOV              R1, #1      ; Representa que ha
+                                                            y un carro
+   72 0000003E         
+   73 0000003E F04F 0201       MOV              R2, #1      ; i = 1
+   74 00000042 F04F 0504       MOV              R5, #4
+   75 00000046         Loops_Calle
+   76 00000046 FB02 F405       MUL              R4, R2, R5  ; R4 = R2*R5
+   77 0000004A 5119            STR              R1, [R3, R4] ; Guarda R1 en la 
+                                                            posicion de memoria
+                                                             (R3+R4)
    78 0000004C         
-   79 0000004C         
-   80 0000004C         ; ******* Function SystemInit *******
-   81 0000004C         ; * Called from startup code
-   82 0000004C         ; * Calls - None
-   83 0000004C         ; * Infinite loop, never returns
-   84 0000004C         
-   85 0000004C         ; * Turns on / off GPIO-D Pins 12 to 15
-   86 0000004C         ; * Implements blinking delay 
-   87 0000004C         ; ** A single loop of delay uses total 6 clock cycles
-   88 0000004C         ; ** One cycle each for CBZ and SUBS instructions
+   79 0000004C F102 0201       ADD              R2, R2, #1  ; i += 1
+   80 00000050 2A21            CMP              R2, #33     ; R2-8==0? Z=1 : Z=
+                                                            0
+   81 00000052 D1F8            BNE              Loops_Calle ; Si no es igual, s
+                                                            alte a Loops_Calle,
+                                                             si es igual, rompa
+                                                             el ciclo
+   82 00000054         
+   83 00000054 4770            BX               LR          ;Return from functi
+                                                            on
+   84 00000056         
+   85 00000056                 ENDFUNC
+   86 00000056         
+   87 00000056         
+   88 00000056         ; ******* Function SystemInit *******
+   89 00000056         ; * Called from startup code
+   90 00000056         ; * Calls - None
+   91 00000056         ; * Infinite loop, never returns
+   92 00000056         
+   93 00000056         ; * Turns on / off GPIO-D Pins 12 to 15
+   94 00000056         ; * Implements blinking delay 
+   95 00000056         ; ** A single loop of delay uses total 6 clock cycles
+   96 00000056         ; ** One cycle each for CBZ and SUBS instructions
+   97 00000056         ; ** 3 cycles for B instruction
 
 
 
 ARM Macro Assembler    Page 4 
 
 
-   89 0000004C         ; ** 3 cycles for B instruction
-   90 0000004C         ; ** B instruction takes 1+p cycles where p=pipeline ref
+   98 00000056         ; ** B instruction takes 1+p cycles where p=pipeline ref
                        il cycles
-   91 0000004C         ; **************************
-   92 0000004C         
-   93 0000004C         __main  FUNCTION
-   94 0000004C         
-   95 0000004C         
-   96 0000004C E7FE            B                .
-   97 0000004E         
-   98 0000004E                 ENDFUNC
-   99 0000004E         
-  100 0000004E 00 00           ALIGN            4
-  101 00000050 00B71B03 
+   99 00000056         ; **************************
+  100 00000056         
+  101 00000056         __main  FUNCTION
+  102 00000056         
+  103 00000056         
+  104 00000056 E7FE            B                .           ; Loop infinito
+  105 00000058         
+  106 00000058                 ENDFUNC
+  107 00000058         
+  108 00000058                 ALIGN            4
+  109 00000058 00B71B03 
                        SYST_RELOAD_500MS
                                EQU              0x00B71B03  ; Cada segundo lanc
                                                             e una excepcion.
-  102 00000050 00000007 
+  110 00000058 00000007 
                        ENABLE_SYSTICK
                                EQU              0x07
-  103 00000050         
-  104 00000050                 END
+  111 00000058         
+  112 00000058                 END
               40023830 
-              40020C00 
-              40020C04 
-              40020C08 
-              40020C0C 
               E000E014 
               00B71B03 
               E000E010 
@@ -241,6 +236,14 @@ ain.lst ..\src\main.s
 ARM Macro Assembler    Page 1 Alphabetic symbol ordering
 Relocatable symbols
 
+Loops_Calle 00000046
+
+Symbol: Loops_Calle
+   Definitions
+      At line 75 in file ..\src\main.s
+   Uses
+      At line 81 in file ..\src\main.s
+Comment: Loops_Calle used once
 MYCODE 00000000
 
 Symbol: MYCODE
@@ -257,15 +260,15 @@ Symbol: SystemInit
    Uses
       At line 15 in file ..\src\main.s
 Comment: SystemInit used once
-__main 0000004C
+__main 00000056
 
 Symbol: __main
    Definitions
-      At line 93 in file ..\src\main.s
+      At line 101 in file ..\src\main.s
    Uses
       At line 16 in file ..\src\main.s
 Comment: __main used once
-3 symbols
+4 symbols
 
 
 
@@ -276,9 +279,9 @@ ENABLE_SYSTICK 00000007
 
 Symbol: ENABLE_SYSTICK
    Definitions
-      At line 102 in file ..\src\main.s
+      At line 110 in file ..\src\main.s
    Uses
-      At line 72 in file ..\src\main.s
+      At line 46 in file ..\src\main.s
 Comment: ENABLE_SYSTICK used once
 GPIOD_BSRR 40020C18
 
@@ -294,8 +297,8 @@ Symbol: GPIOD_MODER
    Definitions
       At line 9 in file ..\src\reg_stm32f407xx.inc
    Uses
-      At line 40 in file ..\src\main.s
-Comment: GPIOD_MODER used once
+      None
+Comment: GPIOD_MODER unused
 GPIOD_ODR 40020C14
 
 Symbol: GPIOD_ODR
@@ -310,24 +313,24 @@ Symbol: GPIOD_OSPEEDR
    Definitions
       At line 11 in file ..\src\reg_stm32f407xx.inc
    Uses
-      At line 53 in file ..\src\main.s
-Comment: GPIOD_OSPEEDR used once
+      None
+Comment: GPIOD_OSPEEDR unused
 GPIOD_OTYPER 40020C04
 
 Symbol: GPIOD_OTYPER
    Definitions
       At line 10 in file ..\src\reg_stm32f407xx.inc
    Uses
-      At line 47 in file ..\src\main.s
-Comment: GPIOD_OTYPER used once
+      None
+Comment: GPIOD_OTYPER unused
 GPIOD_PUPDR 40020C0C
 
 Symbol: GPIOD_PUPDR
    Definitions
       At line 12 in file ..\src\reg_stm32f407xx.inc
    Uses
-      At line 59 in file ..\src\main.s
-Comment: GPIOD_PUPDR used once
+      None
+Comment: GPIOD_PUPDR unused
 RCC_AHB1ENR 40023830
 
 Symbol: RCC_AHB1ENR
@@ -348,7 +351,7 @@ Symbol: SYSTICK_CONTROLR
    Definitions
       At line 17 in file ..\src\reg_stm32f407xx.inc
    Uses
-      At line 70 in file ..\src\main.s
+      At line 44 in file ..\src\main.s
 Comment: SYSTICK_CONTROLR used once
 SYSTICK_RELOADR E000E014
 
@@ -356,15 +359,15 @@ Symbol: SYSTICK_RELOADR
    Definitions
       At line 18 in file ..\src\reg_stm32f407xx.inc
    Uses
-      At line 64 in file ..\src\main.s
+      At line 40 in file ..\src\main.s
 Comment: SYSTICK_RELOADR used once
 SYST_RELOAD_500MS 00B71B03
 
 Symbol: SYST_RELOAD_500MS
    Definitions
-      At line 101 in file ..\src\main.s
+      At line 109 in file ..\src\main.s
    Uses
-      At line 65 in file ..\src\main.s
+      At line 41 in file ..\src\main.s
 Comment: SYST_RELOAD_500MS used once
 11 symbols
-350 symbols in table
+351 symbols in table
