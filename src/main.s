@@ -67,7 +67,7 @@ SystemInit FUNCTION
 	
 	; Inicializando carros
 	; Se harán 4 filas de 8 carros(32 posiciones de memoria) para demostrar el funcionamiento del sistema
-	ADD 	R3, R3, #28 ; Seguiremos escribiendo en #(536870912+48)
+	ADD 	R3, R3, #28 ; Seguiremos escribiendo en #(536870912+28)
 	MOV 	R1, #1 ; Representa que hay un carro
 
 	MOV		R2, #1  ; i = 1
@@ -79,7 +79,15 @@ Loops_Calle
 	ADD 	R2, R2, #1 ; i += 1
 	CMP		R2, #33 ; R2-8==0? Z=1 : Z=0
 	BNE		Loops_Calle ; Si no es igual, salte a Loops_Calle, si es igual, rompa el ciclo
-
+	
+	MOV 	R3, #536870912 ; Direccion base
+	
+	MOV 	R4, #1 ; Estado inicial
+	; Reseteando registros de timer
+	MOV		R10, #0
+	MOV 	R1, #0
+	MOV 	R2, #0
+	
 	BX		LR					;Return from function
 	
 	ENDFUNC

@@ -102,7 +102,7 @@ ARM Macro Assembler    Page 2
                                FUNCTION
    32 00000000         
    33 00000000         ; Enable GPIO clock
-   34 00000000 4915            LDR              R1, =RCC_AHB1ENR ;Pseudo-load a
+   34 00000000 491A            LDR              R1, =RCC_AHB1ENR ;Pseudo-load a
                                                             ddress in R1
    35 00000002 6808            LDR              R0, [R1]    ;Copy contents at a
                                                             ddress in R1 to R0
@@ -113,15 +113,15 @@ ARM Macro Assembler    Page 2
                                                             to address in R1
    38 0000000A         
    39 0000000A         ; Configuracion de SysTick
-   40 0000000A 4914            LDR              R1, =SYSTICK_RELOADR ; En este 
+   40 0000000A 4919            LDR              R1, =SYSTICK_RELOADR ; En este 
                                                             registro se guarda 
                                                             cada cuanto se quie
                                                             re que systick lanc
                                                             e una excepcion
-   41 0000000C 4A14            LDR              R2, =SYST_RELOAD_500MS
+   41 0000000C 4A19            LDR              R2, =SYST_RELOAD_500MS
    42 0000000E 600A            STR              R2, [R1]
    43 00000010         
-   44 00000010 4914            LDR              R1, =SYSTICK_CONTROLR
+   44 00000010 4919            LDR              R1, =SYSTICK_CONTROLR
    45 00000012 6808            LDR              R0, [R1]
    46 00000014 F040 0007       ORR.W            R0, #ENABLE_SYSTICK
    47 00000018 6008            STR              R0, [R1]
@@ -157,7 +157,7 @@ ARM Macro Assembler    Page 3
                         para demostrar el funcionamiento del sistema
    70 00000036 F103 031C       ADD              R3, R3, #28 ; Seguiremos escrib
                                                             iendo en #(53687091
-                                                            2+48)
+                                                            2+28)
    71 0000003A F04F 0101       MOV              R1, #1      ; Representa que ha
                                                             y un carro
    72 0000003E         
@@ -177,49 +177,58 @@ ARM Macro Assembler    Page 3
                                                              si es igual, rompa
                                                              el ciclo
    82 00000054         
-   83 00000054 4770            BX               LR          ;Return from functi
+   83 00000054 F04F 5300       MOV              R3, #536870912 ; Direccion base
+                                                            
+   84 00000058         
+   85 00000058 F04F 0401       MOV              R4, #1      ; Estado inicial
+   86 0000005C         ; Reseteando registros de timer
+   87 0000005C F04F 0A00       MOV              R10, #0
+   88 00000060 F04F 0100       MOV              R1, #0
+   89 00000064 F04F 0200       MOV              R2, #0
+   90 00000068         
+   91 00000068 4770            BX               LR          ;Return from functi
                                                             on
-   84 00000056         
-   85 00000056                 ENDFUNC
-   86 00000056         
-   87 00000056         
-   88 00000056         ; ******* Function SystemInit *******
-   89 00000056         ; * Called from startup code
-   90 00000056         ; * Calls - None
-   91 00000056         ; * Infinite loop, never returns
-   92 00000056         
-   93 00000056         ; * Turns on / off GPIO-D Pins 12 to 15
-   94 00000056         ; * Implements blinking delay 
-   95 00000056         ; ** A single loop of delay uses total 6 clock cycles
-   96 00000056         ; ** One cycle each for CBZ and SUBS instructions
-   97 00000056         ; ** 3 cycles for B instruction
+   92 0000006A         
+   93 0000006A                 ENDFUNC
+   94 0000006A         
+   95 0000006A         
+   96 0000006A         ; ******* Function SystemInit *******
 
 
 
 ARM Macro Assembler    Page 4 
 
 
-   98 00000056         ; ** B instruction takes 1+p cycles where p=pipeline ref
+   97 0000006A         ; * Called from startup code
+   98 0000006A         ; * Calls - None
+   99 0000006A         ; * Infinite loop, never returns
+  100 0000006A         
+  101 0000006A         ; * Turns on / off GPIO-D Pins 12 to 15
+  102 0000006A         ; * Implements blinking delay 
+  103 0000006A         ; ** A single loop of delay uses total 6 clock cycles
+  104 0000006A         ; ** One cycle each for CBZ and SUBS instructions
+  105 0000006A         ; ** 3 cycles for B instruction
+  106 0000006A         ; ** B instruction takes 1+p cycles where p=pipeline ref
                        il cycles
-   99 00000056         ; **************************
-  100 00000056         
-  101 00000056         __main  FUNCTION
-  102 00000056         
-  103 00000056         
-  104 00000056 E7FE            B                .           ; Loop infinito
-  105 00000058         
-  106 00000058                 ENDFUNC
-  107 00000058         
-  108 00000058                 ALIGN            4
-  109 00000058 00B71B03 
+  107 0000006A         ; **************************
+  108 0000006A         
+  109 0000006A         __main  FUNCTION
+  110 0000006A         
+  111 0000006A         
+  112 0000006A E7FE            B                .           ; Loop infinito
+  113 0000006C         
+  114 0000006C                 ENDFUNC
+  115 0000006C         
+  116 0000006C                 ALIGN            4
+  117 0000006C 00B71B03 
                        SYST_RELOAD_500MS
                                EQU              0x00B71B03  ; Cada segundo lanc
                                                             e una excepcion.
-  110 00000058 00000007 
+  118 0000006C 00000007 
                        ENABLE_SYSTICK
                                EQU              0x07
-  111 00000058         
-  112 00000058                 END
+  119 0000006C         
+  120 0000006C                 END
               40023830 
               E000E014 
               00B71B03 
@@ -260,11 +269,11 @@ Symbol: SystemInit
    Uses
       At line 15 in file ..\src\main.s
 Comment: SystemInit used once
-__main 00000056
+__main 0000006A
 
 Symbol: __main
    Definitions
-      At line 101 in file ..\src\main.s
+      At line 109 in file ..\src\main.s
    Uses
       At line 16 in file ..\src\main.s
 Comment: __main used once
@@ -279,7 +288,7 @@ ENABLE_SYSTICK 00000007
 
 Symbol: ENABLE_SYSTICK
    Definitions
-      At line 110 in file ..\src\main.s
+      At line 118 in file ..\src\main.s
    Uses
       At line 46 in file ..\src\main.s
 Comment: ENABLE_SYSTICK used once
@@ -365,7 +374,7 @@ SYST_RELOAD_500MS 00B71B03
 
 Symbol: SYST_RELOAD_500MS
    Definitions
-      At line 109 in file ..\src\main.s
+      At line 117 in file ..\src\main.s
    Uses
       At line 41 in file ..\src\main.s
 Comment: SYST_RELOAD_500MS used once

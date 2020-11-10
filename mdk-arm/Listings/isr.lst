@@ -91,55 +91,291 @@ ARM Macro Assembler    Page 2
    19 00000000         ; Sumando 1s a los registros que llevan el tiempo, el de
                        l semaforo amarillo no 
    20 00000000         ; se toma en cuenta.
-   21 00000000 F102 0201       ADD              R2, R2, #1  ; Contador de tiemp
-                                                            o de los carros
-   22 00000004 F104 0401       ADD              R4, R4, #1  ; tiempo de espera 
+   21 00000000 F10A 0A01       ADD              R10, R10, #1 ; Contador de tiem
+                                                            po de los carros
+   22 00000004 F102 0201       ADD              R2, R2, #1  ; tiempo de espera 
                                                             del carril contrari
                                                             o
    23 00000008         
    24 00000008         ; Comparaciones y saltos
-   25 00000008 F1BD 0F01       CMP              R13, #1     ; Estado 1?
-   26 0000000C D009            BEQ              E1
-   27 0000000E F1BD 0F02       CMP              R13, #2     ; Estado 2?
-   28 00000012 D006            BEQ              E2
-   29 00000014 F1BD 0F03       CMP              R13, #3     ; Estado 3?
-   30 00000018 D003            BEQ              E3
-   31 0000001A F1BD 0F04       CMP              R13, #4     ; Estado 4?
-   32 0000001E D000            BEQ              E4
-   33 00000020         ; Default
-   34 00000020 D0FF            BEQ              Done
-   35 00000022         
-   36 00000022         E1                                   ; Estado 1
-   37 00000022         
-   38 00000022         E2                                   ; Estado 2
-   39 00000022         
-   40 00000022         E3                                   ; Estado 3
-   41 00000022         
-   42 00000022         E4                                   ; Estado 4
-   43 00000022         
-   44 00000022         Done                                 ; Branch de finaliz
-                                                            acion
-   45 00000022         
-   46 00000022 4770            BX               LR          ; Necesario al ser 
-                                                            una excepcion.
-   47 00000024         
-   48 00000024                 ENDP
-   49 00000024         
-   50 00000024                 ALIGN            4
-   51 00000024 0000F000 
-                       LEDs_ON EQU              0x0000F000
+   25 00000008 2C01            CMP              R4, #1      ; Estado 1?
+   26 0000000A D006            BEQ              E1
+   27 0000000C 2C02            CMP              R4, #2      ; Estado 2?
+   28 0000000E D017            BEQ              E2
+   29 00000010 2C03            CMP              R4, #3      ; Estado 3?
+   30 00000012 D015            BEQ              E3
+   31 00000014 2C04            CMP              R4, #4      ; Estado 4?
+   32 00000016 D013            BEQ              E4
+   33 00000018         ; Default
+   34 00000018 D079            BEQ              Done
+   35 0000001A         
+   36 0000001A         E1                                   ; Estado 1
+   37 0000001A         ; Seteando semaforos
+   38 0000001A F04F 0502       MOV              R5, #2      ; Verde
+   39 0000001E 601D            STR              R5, [R3, #0] ; Semaforo 1 a ver
+                                                            de
+   40 00000020 609D            STR              R5, [R3, #8] ;  Semáforo 3 a ve
+                                                            rde
+   41 00000022 615D            STR              R5, [R3, #20] ; Peatonal 2 a ve
+                                                            rde
+   42 00000024 61DD            STR              R5, [R3, #28] ; Peatonal 4 a ve
+                                                            rde
+   43 00000026         
+   44 00000026 F04F 0500       MOV              R5, #0      ; Rojo
+   45 0000002A 605D            STR              R5, [R3, #4] 
+                                                            ; Semaforo 2 a rojo
+                                                            
+   46 0000002C 60DD            STR              R5, [R3, #12] 
+                                                            ; Semaforo 4 a rojo
+                                                            
 
 
 
 ARM Macro Assembler    Page 3 
 
 
-   52 00000024 F0000000 
+   47 0000002E 611D            STR              R5, [R3, #16] 
+                                                            ; Peatonal 1 a rojo
+                                                            
+   48 00000030 619D            STR              R5, [R3, #24] 
+                                                            ; Peatonal 3 a rojo
+                                                            
+   49 00000032         
+   50 00000032         ; Revisando si se deja pasar un carro
+   51 00000032 F1BA 0F0A       CMP              R10, #10    ; Los carros se dej
+                                                            an pasar cada 10 se
+                                                            gundos
+   52 00000036 46F3            MOV              R11, LR     ; Para no perder el
+                                                             link a la ejecucio
+                                                            n original
+   53 00000038 BFA8 F000 
+              F801             BLGE             Pasar_Carro ; Branch with link,
+                                                             para volver a aqui
+                                                            .
+   54 0000003E         
+   55 0000003E E066            B                Done
+   56 00000040         
+   57 00000040         
+   58 00000040         E2                                   ; Estado 2
+   59 00000040         
+   60 00000040         E3                                   ; Estado 3
+   61 00000040         
+   62 00000040         E4                                   ; Estado 4
+   63 00000040         
+   64 00000040         
+   65 00000040         ; Funcion para mover un carro
+   66 00000040         Pasar_Carro
+   67 00000040 F04F 0A00       MOV              R10, #0     ; Resetea el contad
+                                                            or de tiempo de car
+                                                            ros
+   68 00000044 2C03            CMP              R4, #3      ; Si es estado 3, p
+                                                            asan los carros de 
+                                                            C2 y C4
+   69 00000046 D030            BEQ              Pasar_Carro_2
+   70 00000048         
+   71 00000048         Pasar_Carro_1
+   72 00000048 621D            STR              R5, [R3, #32] ; Limpia el prime
+                                                            r campo de la fila 
+                                                            de carros de la cal
+                                                            le 1
+   73 0000004A 661D            STR              R5, [R3, #96] ; Igual con la ca
+                                                            lle 3
+   74 0000004C         ; Aqui vamos a hacer un for loop, para iterar la lista d
+                       e carros de la calle 1 de manera descendente
+   75 0000004C         ; lo que se quiere lograr es mover el ultimo carro, de h
+                       aber, al inicio del array
+   76 0000004C F04F 0700       MOV              R7, #0      ; Reiniciando R7
+   77 00000050 F103 0720       ADD              R7, R3, #32 ; Base para calle 1
+                                                            
+   78 00000054 F04F 0607       MOV              R6, #7      ; i = 7 (vamos a ha
+                                                            cer una cuenta atra
+                                                            s)
+   79 00000058 F04F 0804       MOV              R8, #4      ; R8 = 4 (Para efec
+                                                            tos de la multiplic
+                                                            acion y acceso de m
+
+
+
+ARM Macro Assembler    Page 4 
+
+
+                                                            emoria)
+   80 0000005C         Pasar_Carro_1_loopA
+   81 0000005C FB08 F906       MUL              R9, R8, R6  ; R9 = R8 x R6, par
+                                                            a poner bien la dir
+                                                            eccion de memoria
+   82 00000060 F857 5009       LDR              R5, [R7, R9] ; R5 = carros[i], 
+                                                            a R5 se le asigna e
+                                                            l valor en R7+R9
+   83 00000064         
+   84 00000064 F1A6 0601       SUB              R6, R6, #1  ; i -= 1
+   85 00000068 2E00            CMP              R6, #0      ;
+   86 0000006A BFA8 2D01       CMPGE            R5, #1      ;
+   87 0000006E D1F5            BNE              Pasar_Carro_1_loopA
+   88 00000070         ; Fin del ciclo
+   89 00000070 F04F 0600       MOV              R6, #0      ; Para guardar un 0
+                                                            
+   90 00000074 603D            STR              R5, [R7, #0] ; Guarde R5 en la 
+                                                            primera posicion de
+                                                             la linea de carros
+                                                            
+   91 00000076 F847 6009       STR              R6, [R7, R9] ; Guarde 0 en la d
+                                                            ireccion donde se e
+                                                            ncontro el 1
+   92 0000007A F04F 0500       MOV              R5, #0      ; Reseteando R5
+   93 0000007E         
+   94 0000007E         ; Aqui vamos a hacer un for loop, para iterar la lista d
+                       e carros de la calle 3 de manera descendente
+   95 0000007E         ; lo que se quiere lograr es mover el ultimo carro, de h
+                       aber, al inicio del array
+   96 0000007E F04F 0700       MOV              R7, #0      ; Reiniciando R7
+   97 00000082 F103 0760       ADD              R7, R3, #96 ; Base para calle 3
+                                                            
+   98 00000086 F04F 0607       MOV              R6, #7      ; i = 7 (vamos a ha
+                                                            cer una cuenta atra
+                                                            s)
+   99 0000008A         Pasar_Carro_1_loopB
+  100 0000008A FB08 F906       MUL              R9, R8, R6  ; R9 = R8 x R6, par
+                                                            a poner bien la dir
+                                                            eccion de memoria
+  101 0000008E F857 5009       LDR              R5, [R7, R9] ; R5 = carros[i], 
+                                                            a R5 se le asigna e
+                                                            l valor en R7+R9
+  102 00000092         
+  103 00000092 F1A6 0601       SUB              R6, R6, #1  ; i -= 1
+  104 00000096 2E00            CMP              R6, #0      ;
+  105 00000098 BFA8 2D01       CMPGE            R5, #1      ;
+  106 0000009C D1F5            BNE              Pasar_Carro_1_loopB
+  107 0000009E         ; Fin del ciclo
+  108 0000009E F04F 0600       MOV              R6, #0      ; Reinicia R10, que
+                                                             es la condicion de
+                                                             salida 
+  109 000000A2 603D            STR              R5, [R7, #0] ; Guarde R5 en la 
+                                                            primera posicion de
+                                                             la linea de carros
+                                                            
+  110 000000A4 F847 6009       STR              R6, [R7, R9] ; Guarde 0 en la d
+                                                            ireccion donde se e
+                                                            ncontro el 1
+  111 000000A8         
+
+
+
+ARM Macro Assembler    Page 5 
+
+
+  112 000000A8 4770            BX               LR          ;  ; Devuelvase a d
+                                                            onde estabamos
+  113 000000AA         
+  114 000000AA         Pasar_Carro_2
+  115 000000AA 641D            STR              R5, [R3, #64] ; Limpia el prime
+                                                            r campo de la fila 
+                                                            de carros de la cal
+                                                            le 2
+  116 000000AC F8C3 5084       STR              R5, [R3, #132] ; Igual con la c
+                                                            alle 4
+  117 000000B0         ; Aqui vamos a hacer un for loop, para iterar la lista d
+                       e carros de la calle 2 de manera descendente
+  118 000000B0         ; lo que se quiere lograr es mover el ultimo carro, de h
+                       aber, al inicio del array
+  119 000000B0 F04F 0700       MOV              R7, #0      ; Reiniciando R7
+  120 000000B4 F103 0740       ADD              R7, R3, #64 ; Base para calle 2
+                                                            
+  121 000000B8 F04F 0607       MOV              R6, #7      ; i = 7 (vamos a ha
+                                                            cer una cuenta atra
+                                                            s)
+  122 000000BC F04F 0804       MOV              R8, #4      ; R8 = 4 (Para efec
+                                                            tos de la multiplic
+                                                            acion y acceso de m
+                                                            emoria)
+  123 000000C0         Pasar_Carro_2_loopA
+  124 000000C0 FB08 F906       MUL              R9, R8, R6  ; R9 = R8 x R6, par
+                                                            a poner bien la dir
+                                                            eccion de memoria
+  125 000000C4 F857 5009       LDR              R5, [R7, R9] ; R5 = carros[i], 
+                                                            a R5 se le asigna e
+                                                            l valor en R7+R9
+  126 000000C8         
+  127 000000C8 F1A6 0601       SUB              R6, R6, #1  ; i -= 1
+  128 000000CC 2E00            CMP              R6, #0      ;
+  129 000000CE BFA8 2D01       CMPGE            R5, #1      ;
+  130 000000D2 D1F5            BNE              Pasar_Carro_2_loopA
+  131 000000D4         ; Fin del ciclo
+  132 000000D4 F04F 0600       MOV              R6, #0      ; Para guardar un 0
+                                                            
+  133 000000D8 603D            STR              R5, [R7, #0] ; Guarde R5 en la 
+                                                            primera posicion de
+                                                             la linea de carros
+                                                            
+  134 000000DA F847 6009       STR              R6, [R7, R9] ; Guarde 0 en la d
+                                                            ireccion donde se e
+                                                            ncontro el 1
+  135 000000DE F04F 0500       MOV              R5, #0      ; Reseteando R5
+  136 000000E2         
+  137 000000E2         ; Aqui vamos a hacer un for loop, para iterar la lista d
+                       e carros de la calle 4 de manera descendente
+  138 000000E2         ; lo que se quiere lograr es mover el ultimo carro, de h
+                       aber, al inicio del array
+  139 000000E2 F04F 0700       MOV              R7, #0      ; Reiniciando R7
+  140 000000E6 F103 0784       ADD              R7, R3, #132 
+                                                            ; Base para calle 4
+                                                            
+  141 000000EA F04F 0607       MOV              R6, #7      ; i = 7 (vamos a ha
+                                                            cer una cuenta atra
+                                                            s)
+
+
+
+ARM Macro Assembler    Page 6 
+
+
+  142 000000EE         Pasar_Carro_2_loopB
+  143 000000EE FB08 F906       MUL              R9, R8, R6  ; R9 = R8 x R6, par
+                                                            a poner bien la dir
+                                                            eccion de memoria
+  144 000000F2 F857 5009       LDR              R5, [R7, R9] ; R5 = carros[i], 
+                                                            a R5 se le asigna e
+                                                            l valor en R7+R9
+  145 000000F6         
+  146 000000F6 F1A6 0601       SUB              R6, R6, #1  ; i -= 1
+  147 000000FA 2E00            CMP              R6, #0      ;
+  148 000000FC BFA8 2D01       CMPGE            R5, #1      ;
+  149 00000100 D1F5            BNE              Pasar_Carro_2_loopB
+  150 00000102         ; Fin del ciclo
+  151 00000102 F04F 0600       MOV              R6, #0      ; Reinicia R10, que
+                                                             es la condicion de
+                                                             salida 
+  152 00000106 603D            STR              R5, [R7, #0] ; Guarde R5 en la 
+                                                            primera posicion de
+                                                             la linea de carros
+                                                            
+  153 00000108 F847 6009       STR              R6, [R7, R9] ; Guarde 0 en la d
+                                                            ireccion donde se e
+                                                            ncontro el 1
+  154 0000010C         
+  155 0000010C 4770            BX               LR          ;  ; Devuelvase a d
+                                                            onde estabamos
+  156 0000010E         
+  157 0000010E         
+  158 0000010E         
+  159 0000010E         
+  160 0000010E         Done                                 ; Branch de finaliz
+                                                            acion
+  161 0000010E         
+  162 0000010E 4758            BX               R11         ; Necesario al ser 
+                                                            una excepcion.
+  163 00000110         
+  164 00000110                 ENDP
+  165 00000110         
+  166 00000110                 ALIGN            4
+  167 00000110 0000F000 
+                       LEDs_ON EQU              0x0000F000
+  168 00000110 F0000000 
                        LEDs_OFF
                                EQU              0xF0000000
-   53 00000024         
-   54 00000024         
-   55 00000024                 END
+  169 00000110         
+  170 00000110         
+  171 00000110                 END
 Command Line: --debug --xref --diag_suppress=9931 --cpu=Cortex-M4.fp.sp --apcs=
 interwork --depend=.\objects\isr.d -o.\objects\isr.o -IC:\Users\kev_s\AppData\L
 ocal\Arm\Packs\Keil\STM32F4xx_DFP\2.15.0\Drivers\CMSIS\Device\ST\STM32F4xx\Incl
@@ -152,15 +388,16 @@ VISION_VERSION SETA 531" --predefine="STM32F407xx SETA 1" --list=.\listings\isr
 ARM Macro Assembler    Page 1 Alphabetic symbol ordering
 Relocatable symbols
 
-Done 00000022
+Done 0000010E
 
 Symbol: Done
    Definitions
-      At line 44 in file ..\src\isr.s
+      At line 160 in file ..\src\isr.s
    Uses
       At line 34 in file ..\src\isr.s
-Comment: Done used once
-E1 00000022
+      At line 55 in file ..\src\isr.s
+
+E1 0000001A
 
 Symbol: E1
    Definitions
@@ -168,27 +405,27 @@ Symbol: E1
    Uses
       At line 26 in file ..\src\isr.s
 Comment: E1 used once
-E2 00000022
+E2 00000040
 
 Symbol: E2
    Definitions
-      At line 38 in file ..\src\isr.s
+      At line 58 in file ..\src\isr.s
    Uses
       At line 28 in file ..\src\isr.s
 Comment: E2 used once
-E3 00000022
+E3 00000040
 
 Symbol: E3
    Definitions
-      At line 40 in file ..\src\isr.s
+      At line 60 in file ..\src\isr.s
    Uses
       At line 30 in file ..\src\isr.s
 Comment: E3 used once
-E4 00000022
+E4 00000040
 
 Symbol: E4
    Definitions
-      At line 42 in file ..\src\isr.s
+      At line 62 in file ..\src\isr.s
    Uses
       At line 32 in file ..\src\isr.s
 Comment: E4 used once
@@ -200,6 +437,68 @@ Symbol: ISRCODE
    Uses
       None
 Comment: ISRCODE unused
+Pasar_Carro 00000040
+
+Symbol: Pasar_Carro
+   Definitions
+      At line 66 in file ..\src\isr.s
+   Uses
+      At line 53 in file ..\src\isr.s
+Comment: Pasar_Carro used once
+Pasar_Carro_1 00000048
+
+
+
+
+ARM Macro Assembler    Page 2 Alphabetic symbol ordering
+Relocatable symbols
+
+Symbol: Pasar_Carro_1
+   Definitions
+      At line 71 in file ..\src\isr.s
+   Uses
+      None
+Comment: Pasar_Carro_1 unused
+Pasar_Carro_1_loopA 0000005C
+
+Symbol: Pasar_Carro_1_loopA
+   Definitions
+      At line 80 in file ..\src\isr.s
+   Uses
+      At line 87 in file ..\src\isr.s
+Comment: Pasar_Carro_1_loopA used once
+Pasar_Carro_1_loopB 0000008A
+
+Symbol: Pasar_Carro_1_loopB
+   Definitions
+      At line 99 in file ..\src\isr.s
+   Uses
+      At line 106 in file ..\src\isr.s
+Comment: Pasar_Carro_1_loopB used once
+Pasar_Carro_2 000000AA
+
+Symbol: Pasar_Carro_2
+   Definitions
+      At line 114 in file ..\src\isr.s
+   Uses
+      At line 69 in file ..\src\isr.s
+Comment: Pasar_Carro_2 used once
+Pasar_Carro_2_loopA 000000C0
+
+Symbol: Pasar_Carro_2_loopA
+   Definitions
+      At line 123 in file ..\src\isr.s
+   Uses
+      At line 130 in file ..\src\isr.s
+Comment: Pasar_Carro_2_loopA used once
+Pasar_Carro_2_loopB 000000EE
+
+Symbol: Pasar_Carro_2_loopB
+   Definitions
+      At line 142 in file ..\src\isr.s
+   Uses
+      At line 149 in file ..\src\isr.s
+Comment: Pasar_Carro_2_loopB used once
 SysTick_Handler 00000000
 
 Symbol: SysTick_Handler
@@ -208,7 +507,7 @@ Symbol: SysTick_Handler
    Uses
       At line 15 in file ..\src\isr.s
 Comment: SysTick_Handler used once
-7 symbols
+14 symbols
 
 
 
@@ -267,7 +566,7 @@ LEDs_OFF F0000000
 
 Symbol: LEDs_OFF
    Definitions
-      At line 52 in file ..\src\isr.s
+      At line 168 in file ..\src\isr.s
    Uses
       None
 Comment: LEDs_OFF unused
@@ -281,7 +580,7 @@ ARM Macro Assembler    Page 2 Alphabetic symbol ordering
 Absolute symbols
 
    Definitions
-      At line 51 in file ..\src\isr.s
+      At line 167 in file ..\src\isr.s
    Uses
       None
 Comment: LEDs_ON unused
@@ -310,4 +609,4 @@ Symbol: SYSTICK_RELOADR
       None
 Comment: SYSTICK_RELOADR unused
 11 symbols
-352 symbols in table
+359 symbols in table
