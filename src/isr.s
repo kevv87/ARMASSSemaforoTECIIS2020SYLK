@@ -19,7 +19,7 @@ SysTick_Handler PROC  ; Aqui definimos lo que se ejecuta en la excepcion
 	; Sumando 1s a los registros que llevan el tiempo, el del semaforo amarillo no 
 	; se toma en cuenta.
 	ADD 	R10, R10, #1 ; Contador de tiempo de los carros
-	ADD		R2, R2, #1 ; tiempo de espera del carril contrario
+	ADD		R1, R1, #1 ; tiempo de espera del carril contrario
 	
 	; Comparaciones y saltos
 	CMP 	R4, #1 ; Estado 1?
@@ -31,7 +31,7 @@ SysTick_Handler PROC  ; Aqui definimos lo que se ejecuta en la excepcion
 	CMP 	R4, #4 ; Estado 4?
 	BEQ 	E4
 	; Default
-	BEQ 	Done
+	BEQ.W 	Done
 	
 E1 ; Estado 1
 	; Seteando semaforos
@@ -52,7 +52,32 @@ E1 ; Estado 1
 	MOV		R11, LR ; Para no perder el link a la ejecucion original
 	BLGE 	Pasar_Carro  ; Branch with link, para volver a aqui.
 	
-	B		Done
+	; Computando el movimiento al siguiente estado
+	
+	; Cargando desde memoria
+	LDR 	R5, [R3, #64] ; Primer carro calle 2
+	LDR 	R6, [R3, #132] ; Primer carro calle 4
+	LDR 	R7, [R3, #32];  Primer carro calle 1
+	LDR 	R8, [R3, #96] ; Primer carro calle 3
+	
+	CMP 	R2, #60 ; El carril opuesto ha esperado un minuto?
+	BLT 	E1_No_Minuto ; Si no, branch a no minuto 
+E1_Minuto ; Si el carril opuesto ha esperado un minuto...
+	ORR 	R5, R5, R6 ; Carro en 2 o carro en 4
+	ORR 	R7, R7, R8 ; Carro en 1 o carro en 3
+	CMP 	R5, #1 ; Carro24
+	CMPNE 	R7, #0 ; OR ~Carro13
+	BNE 	E1_No_Minuto
+	MOV		R4, #2 ; Pasa al estado 2 si carro24 or ~carro13
+	B 		Done
+
+E1_No_Minuto ; Si el carril opuesto no ha esperado un minuto...
+	CMP 	R5, #1 ; Carro24
+	CMPEQ 	R7, #0 ; AND ~Carro13
+	BNE 	Done ; Continua en el mismo estado si no se cumple la igualdad
+	MOV 	R4, #2 ; Pasa al estado 2 si carro24 AND ~Carro13
+	
+	B		Done  ; Finalmente branch a done
 	
 	
 E2 ; Estado 2

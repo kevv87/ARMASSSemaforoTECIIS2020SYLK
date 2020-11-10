@@ -497,9 +497,9 @@ ARM Macro Assembler    Page 8
   187 00000000                 IMPORT           SystemInit
   188 00000000                 IMPORT           __main
   189 00000000         
-  190 00000000 4809            LDR              R0, =SystemInit
+  190 00000000 4807            LDR              R0, =SystemInit
   191 00000002 4780            BLX              R0
-  192 00000004 4809            LDR              R0, =__main
+  192 00000004 4807            LDR              R0, =__main
   193 00000006 4700            BX               R0
   194 00000008                 ENDP
   195 00000008         
@@ -863,22 +863,15 @@ ARM Macro Assembler    Page 14
   425 0000001C         
   426 0000001C         __user_initial_stackheap
   427 0000001C         
-  428 0000001C 4804            LDR              R0, =  Heap_Mem
-  429 0000001E 4905            LDR              R1, =(Stack_Mem + Stack_Size)
-  430 00000020 4A05            LDR              R2, = (Heap_Mem +  Heap_Size)
-  431 00000022 4B06            LDR              R3, = Stack_Mem
-  432 00000024 4770            BX               LR
-  433 00000026         
-  434 00000026 00 00           ALIGN
-  435 00000028         
-  436 00000028                 ENDIF
-  437 00000028         
-  438 00000028                 END
+  428 0000001C         
+  429 0000001C 4770            BX               LR
+  430 0000001E         
+  431 0000001E 00 00           ALIGN
+  432 00000020         
+  433 00000020                 ENDIF
+  434 00000020         
+  435 00000020                 END
               00000000 
-              00000000 
-              00000000 
-              00000400 
-              00000200 
               00000000 
 Command Line: --debug --xref --diag_suppress=9931 --cpu=Cortex-M4.fp.sp --apcs=
 interwork --depend=.\objects\startup_stm32f407xx.d -o.\objects\startup_stm32f40
@@ -907,9 +900,8 @@ Symbol: Stack_Mem
    Definitions
       At line 51 in file ..\src\startup_stm32f407xx.s
    Uses
-      At line 429 in file ..\src\startup_stm32f407xx.s
-      At line 431 in file ..\src\startup_stm32f407xx.s
-
+      None
+Comment: Stack_Mem unused
 __initial_sp 00000400
 
 Symbol: __initial_sp
@@ -939,9 +931,8 @@ Symbol: Heap_Mem
    Definitions
       At line 63 in file ..\src\startup_stm32f407xx.s
    Uses
-      At line 428 in file ..\src\startup_stm32f407xx.s
-      At line 430 in file ..\src\startup_stm32f407xx.s
-
+      None
+Comment: Heap_Mem unused
 __heap_base 00000000
 
 Symbol: __heap_base
@@ -1939,8 +1930,7 @@ Symbol: Heap_Size
       At line 59 in file ..\src\startup_stm32f407xx.s
    Uses
       At line 63 in file ..\src\startup_stm32f407xx.s
-      At line 430 in file ..\src\startup_stm32f407xx.s
-
+Comment: Heap_Size used once
 Stack_Size 00000400
 
 Symbol: Stack_Size
@@ -1948,8 +1938,7 @@ Symbol: Stack_Size
       At line 48 in file ..\src\startup_stm32f407xx.s
    Uses
       At line 51 in file ..\src\startup_stm32f407xx.s
-      At line 429 in file ..\src\startup_stm32f407xx.s
-
+Comment: Stack_Size used once
 __Vectors_Size 00000188
 
 Symbol: __Vectors_Size
