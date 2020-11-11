@@ -19,7 +19,11 @@ SysTick_Handler PROC  ; Aqui definimos lo que se ejecuta en la excepcion
 	; Sumando 1s a los registros que llevan el tiempo, el del semaforo amarillo no 
 	; se toma en cuenta.
 	ADD 	R10, R10, #1 ; Contador de tiempo de los carros
-	ADD		R1, R1, #1 ; tiempo de espera del carril contrario
+	LDR 	R0, [R3, #164] ; Contador de tiempo de espera
+	ADD 	R0, R0, #1
+	STR 	R0, [R3, #164]
+	
+	MOV		R11, LR ; Para no perder el link a la ejecucion original
 	
 	; Comparaciones y saltos
 	CMP 	R4, #1 ; Estado 1?
@@ -29,7 +33,7 @@ SysTick_Handler PROC  ; Aqui definimos lo que se ejecuta en la excepcion
 	CMP 	R4, #3 ; Estado 3?
 	BEQ 	E3
 	CMP 	R4, #4 ; Estado 4?
-	BEQ 	E4
+	BEQ.W 	E4
 	; Default
 	BEQ.W 	Done
 	
@@ -49,7 +53,6 @@ E1 ; Estado 1
 	
 	; Revisando si se deja pasar un carro
 	CMP 	R10, #10 ; Los carros se dejan pasar cada 10 segundos
-	MOV		R11, LR ; Para no perder el link a la ejecucion original
 	BLGE 	Pasar_Carro  ; Branch with link, para volver a aqui.
 	
 	; Computando el movimiento al siguiente estado
@@ -59,33 +62,131 @@ E1 ; Estado 1
 	LDR 	R6, [R3, #132] ; Primer carro calle 4
 	LDR 	R7, [R3, #32];  Primer carro calle 1
 	LDR 	R8, [R3, #96] ; Primer carro calle 3
-	
-	CMP 	R2, #60 ; El carril opuesto ha esperado un minuto?
-	BLT 	E1_No_Minuto ; Si no, branch a no minuto 
-E1_Minuto ; Si el carril opuesto ha esperado un minuto...
 	ORR 	R5, R5, R6 ; Carro en 2 o carro en 4
 	ORR 	R7, R7, R8 ; Carro en 1 o carro en 3
+	
+	CMP 	R0, #56 ; El carril opuesto ha esperado un minuto?
+	BLT 	E1_No_Minuto ; Si no, branch a no minuto 
+E1_Minuto ; Si el carril opuesto ha esperado un minuto...
 	CMP 	R5, #1 ; Carro24
 	CMPNE 	R7, #0 ; OR ~Carro13
 	BNE 	E1_No_Minuto
 	MOV		R4, #2 ; Pasa al estado 2 si carro24 or ~carro13
+	; Reiniciando contadores
+	MOV 	R10, #0 ; Reinicia contador de tiempo de carros
+	STR 	R10, [R3, #164] ; Reinicia contador de tiempo de espera
 	B 		Done
 
 E1_No_Minuto ; Si el carril opuesto no ha esperado un minuto...
 	CMP 	R5, #1 ; Carro24
 	CMPEQ 	R7, #0 ; AND ~Carro13
-	BNE 	Done ; Continua en el mismo estado si no se cumple la igualdad
+	BNE.W 	Done ; Continua en el mismo estado si no se cumple la igualdad
 	MOV 	R4, #2 ; Pasa al estado 2 si carro24 AND ~Carro13
+	; Reiniciando contadores
+	MOV 	R10, #0 ; Reinicia contador de tiempo de carros
+	STR 	R10, [R3, #164] ; Reinicia contador de tiempo de espera
 	
 	B		Done  ; Finalmente branch a done
 	
 	
 E2 ; Estado 2
+	; Seteando semaforos
+	MOV 	R5, #1 ; Amarillo
+	STR 	R5, [R3, #0] ; Semaforo 1 a amarillo
+	STR 	R5, [R3, #8] ;  Semáforo 3 a amarillo
+	
+	MOV 	R5, #0 ; Rojo
+	STR 	R5, [R3, #4] ; Semaforo 2 a rojo
+	STR 	R5, [R3, #12] ; Semaforo 4 a rojo
+	STR 	R5, [R3, #16] ; Peatonal 1 a rojo
+	STR 	R5, [R3, #24] ; Peatonal 3 a rojo
+	STR 	R5, [R3, #20] ; Peatonal 2 a verde
+	STR 	R5, [R3, #28] ; Peatonal 4 a verde
+	
+	; No se dejan pasar carros, R10 se toma como contador de semaforo amarillo
+	CMP 	R10, #3 ; Se salta de estado cuando pasan 3 segundos en amarillo
+	BNE.W 	Done
+	MOV 	R4, #3 ; Pasa a estado 3
+	; Reiniciando contadores
+	MOV 	R10, #0 ; Reinicia contador de tiempo de carros
+	STR 	R10, [R3, #164] ; Reinicia contador de tiempo de espera
+	B 		Done ; Termina el caso, salta a done
 	
 E3 ; Estado 3
-
-E4 ; Estado 4
+	; Seteando semaforos
+	MOV 	R5, #2 ; Verde
+	STR 	R5, [R3, #4] ; Semaforo 2 a verde
+	STR 	R5, [R3, #12] ;  Semáforo 4 a verde
+	STR 	R5, [R3, #16] ; Peatonal 1 a verde
+	STR 	R5, [R3, #24] ; Peatonal 3 a verde
 	
+	MOV 	R5, #0 ; Rojo
+	STR 	R5, [R3, #0] ; Semaforo 1 a rojo
+	STR 	R5, [R3, #8] ; Semaforo 3 a rojo
+	STR 	R5, [R3, #20] ; Peatonal 2 a rojo
+	STR 	R5, [R3, #28] ; Peatonal 4 a rojo
+	
+	; Revisando si se deja pasar un carro
+	CMP 	R10, #10 ; Los carros se dejan pasar cada 10 segundos
+	BLGE 	Pasar_Carro  ; Branch with link, para volver a aqui.
+	
+	; Computando el movimiento al siguiente estado
+	
+	; Cargando desde memoria
+	LDR 	R5, [R3, #64] ; Primer carro calle 2
+	LDR 	R6, [R3, #132] ; Primer carro calle 4
+	LDR 	R7, [R3, #32];  Primer carro calle 1
+	LDR 	R8, [R3, #96] ; Primer carro calle 3
+	ORR 	R5, R5, R6 ; Carro en 2 o carro en 4
+	ORR 	R7, R7, R8 ; Carro en 1 o carro en 3
+	
+	CMP 	R0, #56 ; El carril opuesto ha esperado un minuto?
+	BLT 	E3_No_Minuto ; Si no, branch a no minuto 
+E3_Minuto ; Si el carril opuesto ha esperado un minuto...
+	CMP 	R7, #1 ; Carro13
+	CMPNE 	R5, #0 ; OR ~Carro24
+	BNE 	E3_No_Minuto
+	MOV		R4, #4 ; Pasa al estado 4 si ~carro24 or carro13
+	; Reiniciando contadores
+	MOV 	R10, #0 ; Reinicia contador de tiempo de carros
+	STR 	R10, [R3, #164] ; Reinicia contador de tiempo de espera
+	B 		Done
+
+E3_No_Minuto ; Si el carril opuesto no ha esperado un minuto...
+	CMP 	R7, #1 ; Carro13
+	CMPEQ 	R5, #0 ; AND ~Carro24
+	
+	BNE.W 	Done ; Continua en el mismo estado si no se cumple la igualdad
+	MOV 	R4, #4 ; Pasa al estado 4 si ~carro24 AND carro13
+	; Reiniciando contadores
+	MOV 	R10, #0 ; Reinicia contador de tiempo de carros
+	STR 	R10, [R3, #164] ; Reinicia contador de tiempo de espera
+	
+	B		Done  ; Finalmente branch a done
+	
+E4 ; Estado 4
+	; Seteando semaforos
+	MOV 	R5, #1 ; Amarillo
+	STR 	R5, [R3, #4] ; Semaforo 2 a amarillo
+	STR 	R5, [R3, #12] ;  Semáforo 4 a amarillo
+	
+	MOV 	R5, #0 ; Rojo
+	STR 	R5, [R3, #0] ; Semaforo 1 a rojo
+	STR 	R5, [R3, #8] ; Semaforo 3 a rojo
+	STR 	R5, [R3, #16] ; Peatonal 1 a rojo
+	STR 	R5, [R3, #24] ; Peatonal 3 a rojo
+	STR 	R5, [R3, #20] ; Peatonal 2 a verde
+	STR 	R5, [R3, #28] ; Peatonal 4 a verde
+	
+	; No se dejan pasar carros, R10 se toma como contador de semaforo amarillo
+	CMP 	R10, #3 ; Se salta de estado cuando pasan 3 segundos en amarillo
+	BNE 	Done
+	MOV 	R4, #1 ; Pasa a estado 1
+	; Reiniciando contadores
+	MOV 	R10, #0 ; Reinicia contador de tiempo de carros
+	STR 	R10, [R3, #164] ; Reinicia contador de tiempo de espera
+	
+	B 		Done ; Termina el caso, salta a done
 
 ; Funcion para mover un carro
 Pasar_Carro
@@ -108,7 +209,7 @@ Pasar_Carro_1_loopA
 	
 	SUB 	R6, R6, #1 ; i -= 1
 	CMP		R6, #0;
-	CMPGE 	R5, #1;
+	CMPGT 	R5, #1;
 	BNE 	Pasar_Carro_1_loopA
 	; Fin del ciclo
 	MOV 	R6, #0 ; Para guardar un 0
@@ -127,7 +228,7 @@ Pasar_Carro_1_loopB
 	
 	SUB 	R6, R6, #1 ; i -= 1
 	CMP		R6, #0;
-	CMPGE 	R5, #1;
+	CMPGT 	R5, #1;
 	BNE 	Pasar_Carro_1_loopB
 	; Fin del ciclo
 	MOV 	R6, #0 ; Reinicia R10, que es la condicion de salida 
@@ -151,7 +252,7 @@ Pasar_Carro_2_loopA
 	
 	SUB 	R6, R6, #1 ; i -= 1
 	CMP		R6, #0;
-	CMPGE 	R5, #1;
+	CMPGT 	R5, #1;
 	BNE 	Pasar_Carro_2_loopA
 	; Fin del ciclo
 	MOV 	R6, #0 ; Para guardar un 0
@@ -164,13 +265,14 @@ Pasar_Carro_2_loopA
 	MOV 	R7, #0 ; Reiniciando R7
 	ADD		R7, R3, #132 ; Base para calle 4
 	MOV 	R6, #7 ; i = 7 (vamos a hacer una cuenta atras)
+	MOV 	R8, #4 ; R8 = 4 (Para efectos de la multiplicacion y acceso de memoria)
 Pasar_Carro_2_loopB
 	MUL		R9, R8, R6 ; R9 = R8 x R6, para poner bien la direccion de memoria
 	LDR 	R5, [R7, R9] ; R5 = carros[i], a R5 se le asigna el valor en R7+R9
 	
 	SUB 	R6, R6, #1 ; i -= 1
 	CMP		R6, #0;
-	CMPGE 	R5, #1;
+	CMPGT 	R5, #1;
 	BNE 	Pasar_Carro_2_loopB
 	; Fin del ciclo
 	MOV 	R6, #0 ; Reinicia R10, que es la condicion de salida 

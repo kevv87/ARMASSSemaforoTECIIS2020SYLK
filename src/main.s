@@ -85,8 +85,9 @@ Loops_Calle
 	MOV 	R4, #1 ; Estado inicial
 	; Reseteando registros de timer
 	MOV		R10, #0
-	MOV 	R1, #0
-	MOV 	R2, #0
+	
+	MOV 	R0, #0
+	STR 	R0, [R3, #164] ; Guardando el timer de espera
 	
 	BX		LR					;Return from function
 	

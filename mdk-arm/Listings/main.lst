@@ -183,52 +183,54 @@ ARM Macro Assembler    Page 3
    85 00000058 F04F 0401       MOV              R4, #1      ; Estado inicial
    86 0000005C         ; Reseteando registros de timer
    87 0000005C F04F 0A00       MOV              R10, #0
-   88 00000060 F04F 0100       MOV              R1, #0
-   89 00000064 F04F 0200       MOV              R2, #0
-   90 00000068         
-   91 00000068 4770            BX               LR          ;Return from functi
+   88 00000060         
+   89 00000060 F04F 0000       MOV              R0, #0
+   90 00000064 F8C3 00A4       STR              R0, [R3, #164] ; Guardando el t
+                                                            imer de espera
+   91 00000068         
+   92 00000068 4770            BX               LR          ;Return from functi
                                                             on
-   92 0000006A         
-   93 0000006A                 ENDFUNC
-   94 0000006A         
+   93 0000006A         
+   94 0000006A                 ENDFUNC
    95 0000006A         
-   96 0000006A         ; ******* Function SystemInit *******
 
 
 
 ARM Macro Assembler    Page 4 
 
 
-   97 0000006A         ; * Called from startup code
-   98 0000006A         ; * Calls - None
-   99 0000006A         ; * Infinite loop, never returns
-  100 0000006A         
-  101 0000006A         ; * Turns on / off GPIO-D Pins 12 to 15
-  102 0000006A         ; * Implements blinking delay 
-  103 0000006A         ; ** A single loop of delay uses total 6 clock cycles
-  104 0000006A         ; ** One cycle each for CBZ and SUBS instructions
-  105 0000006A         ; ** 3 cycles for B instruction
-  106 0000006A         ; ** B instruction takes 1+p cycles where p=pipeline ref
+   96 0000006A         
+   97 0000006A         ; ******* Function SystemInit *******
+   98 0000006A         ; * Called from startup code
+   99 0000006A         ; * Calls - None
+  100 0000006A         ; * Infinite loop, never returns
+  101 0000006A         
+  102 0000006A         ; * Turns on / off GPIO-D Pins 12 to 15
+  103 0000006A         ; * Implements blinking delay 
+  104 0000006A         ; ** A single loop of delay uses total 6 clock cycles
+  105 0000006A         ; ** One cycle each for CBZ and SUBS instructions
+  106 0000006A         ; ** 3 cycles for B instruction
+  107 0000006A         ; ** B instruction takes 1+p cycles where p=pipeline ref
                        il cycles
-  107 0000006A         ; **************************
-  108 0000006A         
-  109 0000006A         __main  FUNCTION
-  110 0000006A         
+  108 0000006A         ; **************************
+  109 0000006A         
+  110 0000006A         __main  FUNCTION
   111 0000006A         
-  112 0000006A E7FE            B                .           ; Loop infinito
-  113 0000006C         
-  114 0000006C                 ENDFUNC
-  115 0000006C         
-  116 0000006C                 ALIGN            4
-  117 0000006C 00B71B03 
+  112 0000006A         
+  113 0000006A E7FE            B                .           ; Loop infinito
+  114 0000006C         
+  115 0000006C                 ENDFUNC
+  116 0000006C         
+  117 0000006C                 ALIGN            4
+  118 0000006C 00B71B03 
                        SYST_RELOAD_500MS
                                EQU              0x00B71B03  ; Cada segundo lanc
                                                             e una excepcion.
-  118 0000006C 00000007 
+  119 0000006C 00000007 
                        ENABLE_SYSTICK
                                EQU              0x07
-  119 0000006C         
-  120 0000006C                 END
+  120 0000006C         
+  121 0000006C                 END
               40023830 
               E000E014 
               00B71B03 
@@ -273,7 +275,7 @@ __main 0000006A
 
 Symbol: __main
    Definitions
-      At line 109 in file ..\src\main.s
+      At line 110 in file ..\src\main.s
    Uses
       At line 16 in file ..\src\main.s
 Comment: __main used once
@@ -288,7 +290,7 @@ ENABLE_SYSTICK 00000007
 
 Symbol: ENABLE_SYSTICK
    Definitions
-      At line 118 in file ..\src\main.s
+      At line 119 in file ..\src\main.s
    Uses
       At line 46 in file ..\src\main.s
 Comment: ENABLE_SYSTICK used once
@@ -374,7 +376,7 @@ SYST_RELOAD_500MS 00B71B03
 
 Symbol: SYST_RELOAD_500MS
    Definitions
-      At line 117 in file ..\src\main.s
+      At line 118 in file ..\src\main.s
    Uses
       At line 41 in file ..\src\main.s
 Comment: SYST_RELOAD_500MS used once
